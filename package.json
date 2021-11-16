@@ -1,0 +1,21 @@
+{
+  "name": "betterletter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thespielplatz/BetterLetter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thespielplatz/BetterLetter/issues"
+  },
+  "homepage": "https://github.com/thespielplatz/BetterLetter#readme"
+}
