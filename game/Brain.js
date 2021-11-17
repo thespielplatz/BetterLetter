@@ -13,9 +13,16 @@ class Brain {
 
 class OreganoBrain extends Brain {
     process(me, others, hand, turns) {
+        let saveChoices = others.reduce((prev, p) => {
+            if (!p.killed && !p.handMaide) prev.push(p.seat);
+            return prev;
+            }, []);
+
+        console.log(`Others: ${JSON.stringify(others)}`);
+        console.log(`saveChoices: ${JSON.stringify(saveChoices)}`);
+
         // Countess
         if (hand.indexOf(7) >= 0 && (hand.indexOf(5) >= 0 || hand.indexOf(6) >= 0 )) {
-            console.log("Choosing 7")
             return { card : 7 };
         };
 
@@ -24,26 +31,24 @@ class OreganoBrain extends Brain {
 
         // Random
         const handIndex = Math.floor(Math.random() * 2);
-        const card = (hasPrincess ? hand[hasPrincess == 0 ? 1 : 0] : hand[handIndex]);
-        console.log("Choosing " + card)
+        const card = (hasPrincess >= 0? hand[hasPrincess == 0 ? 1 : 0] : hand[handIndex]);
 
-        // Todo: check for 4: Maid
-        const otherIndex = Math.floor(Math.random() * others.length);
+        if (card == 5) {
+            saveChoices.push(me.seat);
+        }
+        const randomSeat = (saveChoices.length == 0 ? -1 : saveChoices[Math.floor(Math.random() * saveChoices.length)]);
 
         switch (card) {
             case 1:
-                return { card : card,  on : others[otherIndex].seat, has : Math.floor(Math.random() * 8) + 1};
+                return { card : card,  on : randomSeat, has : Math.floor(Math.random() * 8) + 1};
 
             case 2:
             case 3:
             case 6:
-                return { card : card,  on : others[otherIndex].seat};
+                return { card : card,  on : randomSeat};
 
             case 5:
-                // Todo: check for 4: Maid
-                const allPlayers = [me, ...others];
-                const allIndex = Math.floor(Math.random() * allPlayers.length);
-                return { card : card,  on : allPlayers[allIndex].seat};
+                return { card : card,  on : randomSeat};
 
             default:
                 return { card : card };

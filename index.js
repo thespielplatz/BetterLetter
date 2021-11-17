@@ -19,23 +19,38 @@ dealer.addPlayer(p1);
 dealer.addPlayer(p2);
 dealer.addPlayer(p3);
 
-dealer.prepare();
-dealer.logState();
-dealer.start();
-dealer.logState();
 
-while (dealer.isGameRunning()) {
-    try {
-        dealer.playTurn();
-    } catch (e) {
-        console.log(e);
-        break;
+
+let gameBroke = false;
+
+for (i = 0; i < 1000; i++) {
+    console.log(`### Game Start ${i}`);
+    dealer.start();
+
+    while (dealer.isGameRunning()) {
+        dealer.logState();
+        try {
+            dealer.playTurn();
+        } catch (e) {
+            console.log("### Game Broke");
+            console.log(e);
+            gameBroke = true;
+            break;
+        }
     }
+    if (gameBroke) break;
 }
 
-let winOrder = dealer.checkWin();
-console.log("winOrder");
-console.log(winOrder);
+if (gameBroke) {
+    console.log("### Game Broke");
 
-dealer.logState();
-dealer.logTurns();
+} else {
+    console.log("### Game Ended");
+    let winOrder = dealer.checkWin();
+    console.log(winOrder);
+    dealer.logState();
+    console.log("### Game Log");
+    dealer.logTurns();
+}
+
+

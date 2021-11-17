@@ -20,6 +20,8 @@ class Player {
         this.hand = [];
         this.played = [];
         this.killed = false;
+        this.handMaide = false;
+        this.priest = undefined;
     }
 
     sitDown(seat) {
@@ -34,35 +36,64 @@ class Player {
      * @param {Array} others
      * @param {Array} hand
      * @param {Array} turns
+     * @param {boolean} nonChooseAble
      * @return { card: Number, call: String }
      */
-    askAction(others, hand, turns) {
-        const me = this.getPublicInfo();
-        const action = this.brain.process(me, others, hand, turns);
+    askAction(others, hand, turns, nonChooseAble) {
+        this.handMaide = false;
+
         const definition = '| Definition: { card : (cardId,Int), on : (optional seatId:Int), has : (optional seatId:Int)}';
-
-        if (!('card' in action)) throw new PlayerActionError(me, action, `{ card : MISSING } ${definition}`);
-
-        // Todo: typecheck & valuecheck of action.card
-
-        if ([1,2,3,5,6].indexOf(action.card) >= 0) {
-            if (!('on' in action)) throw new PlayerActionError(me, action, `{ card : ${action.card}, on : MISSING } ${definition}`);
-
-            // Todo: on me or not on me
-
-            if (action.card === 1 && !('has' in action)) {
-                throw new PlayerActionError(me, action, `{ card : ${action.card}, on : ${action.on}, has : MISSING } ${definition}`);
-            }
+        const me = this.getPublicInfo();
+        if (this.priest !== undefined) {
+            me.priest = this.priest;
+            this.priest = undefined;
         }
 
-        // Todo: typecheck & valuecheck of action.call
+        // Get Player Action
+        const action = this.brain.process(me, others, hand, turns);
 
+        // Check action.card
+        if (!('card' in action)) throw new PlayerActionError(me, action, `{ card : MISSING } ${definition}`);
+        const cardType = typeof action.card;
+        if (!(cardType !== "Number")) throw new PlayerActionError(me, action, `{ card : not Number } it is ${cardType} ${definition}`);
+
+        // Check action.on
+        const oncards = [5];
+        if (!nonChooseAble) oncards.push(1,2,3,6)
+        if (oncards.indexOf(action.card) >= 0) {
+            if (!('on' in action)) throw new PlayerActionError(me, action, `{ card : ${action.card}, on : MISSING } ${definition}`);
+            const onType = typeof action.on;
+            if (!(onType !== "Number")) throw new PlayerActionError(me, action, `{ on : not a Number } it is ${onType} ${definition}`);
+        }
+
+        // Check action.has
+        if (!nonChooseAble && action.card === 1) {
+            if (!('has' in action)) throw new PlayerActionError(me, action, `{ card : ${action.card}, on : ${action.on}, has : MISSING } ${definition}`);
+            const hasType = typeof action.has;
+            if (!(hasType !== "Number")) throw new PlayerActionError(me, action, `{ has : not a Number } it is ${hasType} ${definition}`);
+        }
+
+        this.log();
+        console.log(action);
         this.played.push(action.card);
         this.hand.splice(this.hand.indexOf(action.card),1);
+        this.log();
 
         return action;
     }
 
+    saveHandmaide() {
+        this.handMaide = true;
+    }
+
+    savePriestLook(card) {
+        this.priest = card;
+    }
+
+    kill() {
+        this.killed = true;
+        this.played.push(this.hand.pop());
+    }
 
     getPublicInfo() {
         return {
@@ -70,12 +101,13 @@ class Player {
             points: this.points,
             seat: this.seat,
             killed: this.killed,
+            handMaide : this.handMaide,
             played: Array.from(this.played)
         };
     }
 
     log() {
-        console.log(`Seat #${this.seat} ${this.name}\tHand: ${this.hand.toString()}\tPlayed: ${this.played.toString()}`);
+        console.log(`Seat #${this.seat} ${this.name}\tHand: ${this.hand.toString()}\tPlayed: ${this.played.toString()}\t${this.handMaide ? "Handmaide" : ""}${this.killed ? "dead" : ""}`);
     }
 }
 
