@@ -1,4 +1,5 @@
 console.log("main.js");
+const fs = require('fs');
 
 const SeedGenerator = require('./tools/Seed.js');
 
@@ -6,7 +7,8 @@ const Player = require('./game/Player.js');
 const Dealer = require('./game/Dealer.js');
 const Brains = require('./game/Brain.js');
 
-const gen = new SeedGenerator("LetterBots");
+const seedword = "LetterBots"
+const gen = new SeedGenerator(seedword);
 
 const b = new Brains.OreganoBrain();
 const p1 = new Player("Luxx", b, gen);
@@ -23,22 +25,19 @@ dealer.addPlayer(p3);
 
 let gameBroke = false;
 
-for (i = 0; i < 1000; i++) {
-    console.log(`### Game Start ${i}`);
-    dealer.start();
+console.log(`### Game Start with Seedword ${seedword}`);
+dealer.start();
 
-    while (dealer.isGameRunning()) {
-        dealer.logState();
-        try {
-            dealer.playTurn();
-        } catch (e) {
-            console.log("### Game Broke");
-            console.log(e);
-            gameBroke = true;
-            break;
-        }
+while (dealer.isGameRunning()) {
+    dealer.logState();
+    try {
+        dealer.playTurn();
+    } catch (e) {
+        console.log("### Game Broke");
+        console.log(e);
+        gameBroke = true;
+        break;
     }
-    if (gameBroke) break;
 }
 
 if (gameBroke) {
@@ -51,6 +50,16 @@ if (gameBroke) {
     dealer.logState();
     console.log("### Game Log");
     dealer.logTurns();
+
+    let file = `./server/static/export/${seedword}.json`;
+
+    let data = JSON.stringify(dealer.data, null, 4);
+    fs.writeFileSync(file, data, (err) => {
+        if (err) throw err;
+        console.log('Data written to file');
+    });
+
+    console.log(`Data Exported to ${file}`);
 }
 
 

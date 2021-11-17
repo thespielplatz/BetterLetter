@@ -1,0 +1,51 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>#title#</title>
+    <meta name="description" content="">
+    <meta name="author" content="TheSpielplatz">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <link rel="stylesheet" href="static/css/general.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        #full-height {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            background: linear-gradient(-45deg, #0b6000, #0c5d0c);
+            background-size: 400% 400%;
+        }
+
+        body {
+            background-color: white;
+        }
+    </style>
+    <script src="static/lib/jquery-3.6.0.min.js"></script>
+    <script src="static/lib/phaser.min.js"></script>
+    <script src="static/js/go/button.js"></script>
+</head>
+
+<body>
+    <div id="full-height">
+        <div id="table"></div>
+    </div>
+    <!--
+<div class="logo-overlay">
+    <img class="img-responsive" width="70" height="40" src="static/img/tsp_70x112.png" alt="TheSpielplatz" scale="0">
+</div>
+<script src="js/scripts.js"></script>
+-->
+    <script src="static/js/replay.js"></script>
+</body>
+</html>

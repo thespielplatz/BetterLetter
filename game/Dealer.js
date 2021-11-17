@@ -18,13 +18,13 @@ class Dealer {
         this.gen = seedGenerator
         this.deck = undefined;
         this.players = [];
-        this.turns = [];
+        this.data = {};
         this.sidecard = undefined;
         this.internalPlayerIndex = 0;
     }
 
     getTurn() {
-        return this.turns.length;
+        return this.data.turns.length;
     }
 
     buildDeck() {
@@ -65,13 +65,22 @@ class Dealer {
     }
 
     start() {
+        this.data = {
+            turns : [],
+            players : []
+        };
+
         this.buildDeck();
         this.shuffleDeck();
         this.internalPlayerIndex = 0;
 
+        this.data.deck = Array.from(this.deck);
         this.sidecard = this.deck.shift();
+        this.data.sidecard = this.sidecard;
 
         this.players.forEach((p) => {
+            this.data.players.push(p.getPublicInfo());
+
             p.reset();
             p.getCard(this.deck.shift());
         });
@@ -93,7 +102,7 @@ class Dealer {
         const nonChooseAble = otherPlayers.every((p) => p.killed || p.handMaide);
         if (nonChooseAble) console.log("Non Choose Able!");
 
-        const action = activePlayer.askAction(otherPlayers, Array.from(activePlayer.hand), Array.from(this.turns), nonChooseAble);
+        const action = activePlayer.askAction(otherPlayers, Array.from(activePlayer.hand), Array.from(this.data.turns), nonChooseAble);
 
         if (nonChooseAble && action.card !== 5) {
             console.log(`${activePlayer.name} played ${action.card}`);
@@ -188,13 +197,13 @@ class Dealer {
 
         let turn = {
             ...action,
-            turn: this.turns.length,
+            turn: this.data.turns.length,
             seat: activePlayer.seat,
             name: activePlayer.name,
             resolve
         };
 
-        this.turns.push(turn);
+        this.data.turns.push(turn);
     }
 
     isGameRunning() {
@@ -222,6 +231,8 @@ class Dealer {
             return p1.lastHand > p2.lastHand ? -1 : 1;
         });
 
+        this.data.win = Array.from(winOrder);
+
         return winOrder;
     }
 
@@ -232,7 +243,7 @@ class Dealer {
     }
 
     logTurns() {
-        this.turns.forEach((t) => {
+        this.data.turns.forEach((t) => {
             console.log(`Turn #${t.turn} ${t.name} played ${t.card}${('on' in t && t.on >= 0 ? ` on ${this.players[t.on].name}` : '')}${('has' in t ? ` has ${t.has}` : '')}`)
             console.log(`Resolve: ${JSON.stringify(t.resolve)}`);
         });
