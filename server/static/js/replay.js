@@ -46,7 +46,9 @@ function preload() {
 }
 
 function create() {
-    var image = this.add.image(200, 500, "back");
+    for (i = 0; i < 16; i++) {
+        var card = new Card(this, 600+i, 400+i);
+    }
 }
 
 function update() {
