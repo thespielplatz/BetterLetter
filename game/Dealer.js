@@ -57,6 +57,7 @@ class Dealer {
      * @param {Player} p a Player
      */
     addPlayer(p) {
+        p.sitDown(this.players.length);
         this.players.push(p);
     }
 
@@ -77,15 +78,40 @@ class Dealer {
 
         let otherPlayers = this.players.filter(p => p.name !== activePlayer.name).map(p => p.getPublicInfo());
 
-        const action = activePlayer.askAction(activePlayer.getPublicInfo(), otherPlayers, Array.from(activePlayer.hand), Array.from(this.turns));
-        console.log(`${activePlayer.name} played ${action.card}${('call' in action ? ` on ${action.call}` : '')}`);
+        const action = activePlayer.askAction(otherPlayers, Array.from(activePlayer.hand), Array.from(this.turns));
+        console.log(`${activePlayer.name} played ${action.card}${('on' in action ? ` on ${this.players[action.on].name}` : '')}${('has' in action ? ` has ${action.has}` : '')}`);
 
         let turn = {
+            ...action,
             turn: this.turns.length,
+            seat: activePlayer.seat,
             name: activePlayer.name,
-            ...action
         };
         this.turns.push(turn);
+    }
+
+    isGameRunning() {
+        if (this.deck.length <= 0) return false;
+        if (this.players.every((p) => p.killed)) return false;
+
+        return true;
+    }
+
+    checkWin() {
+        let winOrder = this.players.map(p => {
+            let player = { killed: p.killed, seat: p.seat, name: p.name};
+            if (!p.killed) player.lastHand = p.hand[0];
+            return player;
+
+        }).sort((p1, p2) => {
+            if (p1.killed && p2.killed) return 0;
+            if (p1.killed) return 1;
+            if (p2.killed) return -1;
+            if (p1.lastHand == p2.lastHand) return 0;
+            return p1.lastHand > p2.lastHand ? -1 : 1;
+        });
+
+        return winOrder;
     }
 
     logState() {
@@ -95,7 +121,9 @@ class Dealer {
     }
 
     logTurns() {
-        this.turns.forEach((t) => console.log(`Turn #${t.turn} ${t.name} played ${t.card}${('call' in t ? ` on ${t.call}` : '')}`));
+        this.turns.forEach((t) =>
+            console.log(`Turn #${t.turn} ${t.name} played ${t.card}${('on' in t ? ` on ${this.players[t.on].name}` : '')}${('has' in t ? ` has ${t.has}` : '')}`)
+        );
         console.log(``);
     }
 }

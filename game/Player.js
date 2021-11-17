@@ -19,6 +19,7 @@ class Player {
     reset() {
         this.hand = [];
         this.played = [];
+        this.killed = false;
     }
 
     sitDown(seat) {
@@ -35,15 +36,23 @@ class Player {
      * @param {Array} turns
      * @return { card: Number, call: String }
      */
-    askAction(me, others, hand, turns) {
+    askAction(others, hand, turns) {
+        const me = this.getPublicInfo();
         const action = this.brain.process(me, others, hand, turns);
+        const definition = '| Definition: { card : (cardId,Int), on : (optional seatId:Int), has : (optional seatId:Int)}';
 
-        if (!('card' in action)) new PlayerActionError(me, `Return has no "card" { card : (Int), call : (optional:String) }`);
+        if (!('card' in action)) throw new PlayerActionError(me, action, `{ card : MISSING } ${definition}`);
 
         // Todo: typecheck & valuecheck of action.card
 
         if ([1,2,3,5,6].indexOf(action.card) >= 0) {
-            if (!('call' in action)) new PlayerActionError(me, `Return card(${action.card}) no { card : (Int), call : (String) }`)
+            if (!('on' in action)) throw new PlayerActionError(me, action, `{ card : ${action.card}, on : MISSING } ${definition}`);
+
+            // Todo: on me or not on me
+
+            if (action.card === 1 && !('has' in action)) {
+                throw new PlayerActionError(me, action, `{ card : ${action.card}, on : ${action.on}, has : MISSING } ${definition}`);
+            }
         }
 
         // Todo: typecheck & valuecheck of action.call
@@ -60,12 +69,13 @@ class Player {
             name: this.name,
             points: this.points,
             seat: this.seat,
-            played : Array.from(this.played)
+            killed: this.killed,
+            played: Array.from(this.played)
         };
     }
 
     log() {
-        console.log(`Name #${this.name}\tHand: ${this.hand.toString()}\tPlayed: ${this.played.toString()}`);
+        console.log(`Seat #${this.seat} ${this.name}\tHand: ${this.hand.toString()}\tPlayed: ${this.played.toString()}`);
     }
 }
 

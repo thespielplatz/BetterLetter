@@ -1,5 +1,5 @@
 class PlayerActionError extends Error {
-    constructor(player, ...params) {
+    constructor(player, action, ...params) {
         super(...params);
 
         // Maintains proper stack trace for where our error was thrown (only available on V8)
@@ -8,6 +8,7 @@ class PlayerActionError extends Error {
         }
 
         this.name = 'PlayerActionError';
+        this.message += `\nReturn: ${JSON.stringify(action)}`;
     }
 }
 

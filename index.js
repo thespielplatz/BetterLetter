@@ -23,16 +23,19 @@ dealer.prepare();
 dealer.logState();
 dealer.start();
 dealer.logState();
-dealer.playTurn();
-dealer.playTurn();
-dealer.playTurn();
 
-dealer.playTurn();
-dealer.playTurn();
-dealer.playTurn();
-dealer.playTurn();
-dealer.playTurn();
-dealer.playTurn();
+while (dealer.isGameRunning()) {
+    try {
+        dealer.playTurn();
+    } catch (e) {
+        console.log(e);
+        break;
+    }
+}
+
+let winOrder = dealer.checkWin();
+console.log("winOrder");
+console.log(winOrder);
 
 dealer.logState();
 dealer.logTurns();
