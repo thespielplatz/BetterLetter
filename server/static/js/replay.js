@@ -33,7 +33,7 @@ var game = new Phaser.Game(config);
 
 let gamedata = undefined;
 let turnText = undefined;
-let turn = 0;
+let turnCounter = 0;
 
 let cardimages = [
     { texture: 'back', path: './static/img/ll/back.jpg' },
@@ -46,11 +46,20 @@ let cardimages = [
     { texture: '7_countess', path: './static/img/ll/7_countess.jpg' },
     { texture: '8_princess', path: './static/img/ll/8_princess.jpg' },
 ];
+
+let backButton, nextButton;
+
 function preload() {
-    const back = new Button(this, 35, 50, 70, 30, "Back");
-    back.visible = false;
-    const next = new Button(this, 115, 50, 70, 30, "Next");
-    next.visible = false;
+    const scene = this;
+
+    backButton = new Button(this, 35, 50, 70, 30, "Back");
+    backButton.visible = false;
+    nextButton = new Button(this, 115, 50, 70, 30, "Next");
+    nextButton.visible = false;
+
+    nextButton.on("pointerdown", () => {
+        nextTurn(scene);
+    });
 
     cardimages.forEach(config => {this.load.image(config.texture, config.path);});
 }
@@ -62,6 +71,7 @@ let deck = [];
 let sidecard;
 let Ydeck = 130;
 let Psidecard = { x: 800, y: Ydeck };
+let deckIndex;
 
 function create() {
     const scene = this;
@@ -80,7 +90,7 @@ function create() {
     for (let i = 0; i < 16; i++) {
         deck.push(new Card(this, 600+i, Ydeck+i));
     }
-
+    deckIndex = deck.length - 1;
 }
 
 function update() {
@@ -101,19 +111,32 @@ function start(scene) {
     r.y = scene.sys.game.scale.gameSize.height - r.h;
     r.x = r.m + r.w * 0.5
 
+    // Sidecard
+    sidecard = deck[deckIndex];
+    deckIndex--;
+    sidecard.setPosition(Psidecard.x, Psidecard.y);
+    changeCard(sidecard, gamedata.sidecard);
+
+    // Player Setup
     gamedata.players.forEach(p => {
         scene.add.rectangle(r.x, r.y, r.w, r.h, 0xFFFFFF, 0.3).setStrokeStyle(2, 0xFFFFFF, 1.0);
         scene.add.text(r.x, r.y + r.mYName, p.name, { fontFamily: 'Bebas Neue', fontSize: '25px' }).setOrigin(0.5);
 
-        let starthand = deck.pop();
+        let starthand = deck[deckIndex];
+        deckIndex--;
         starthand.setPosition(r.x, r.y);
-        changeCard(starthand, gamedata.turnStates[0]["hands"][p.seat][0]);
+        changeCard(starthand, gamedata.turnStates[0][p.seat].hands[0]);
         scene.children.bringToTop(starthand);
         r.x += r.s + r.w;
     });
 
-    // Sidecard
-    sidecard = deck.pop();
-    sidecard.setPosition(Psidecard.x, Psidecard.y);
-    changeCard(sidecard, gamedata.sidecard);
+    // UI
+    nextButton.visible = true;
+}
+
+function nextTurn(scene) {
+    if (turnCounter + 1 >= gamedata.turnStates.length) return;
+    turnCounter++;
+
+    const turn = gamedata.turnStates[turnCounter];
 }

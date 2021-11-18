@@ -80,10 +80,6 @@ class Dealer {
         this.sidecard = this.deck.shift();
         this.data.sidecard = this.sidecard;
 
-        let turnstate = {
-            hands : []
-        };
-
         this.players.forEach((p) => {
             p.reset();
             const startHand = this.deck.shift();
@@ -92,11 +88,9 @@ class Dealer {
             let exportedPlayer = p.getPublicInfo();
             exportedPlayer.startHand = startHand;
             this.data.players.push(exportedPlayer);
-
-            turnstate.hands.push([startHand]);
         });
 
-        this.data.turnStates.push(turnstate);
+        this.data.turnStates.push(this.buildTurnState());
     }
 
     playTurn() {
@@ -217,6 +211,10 @@ class Dealer {
         };
 
         this.data.turns.push(turn);
+
+        let turnstate = this.buildTurnState();
+        this.data.turnStates.push(turnstate);
+
     }
 
     isGameRunning() {
@@ -261,6 +259,18 @@ class Dealer {
             console.log(`Resolve: ${JSON.stringify(t.resolve)}`);
         });
         console.log(``);
+    }
+
+    buildTurnState() {
+        let turnstate = {};
+
+        this.players.forEach((p) => {
+            turnstate[p.seat] = {
+                hands : Array.from(p.hand),
+                played : Array.from(p.played)
+            }
+        });
+        return turnstate;
     }
 }
 
