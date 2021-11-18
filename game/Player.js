@@ -1,4 +1,5 @@
 const PlayerActionError = require('./PlayerActionError.js')
+const Deck = require('./Deck.js')
 
 class Player {
     /**
@@ -29,7 +30,17 @@ class Player {
     }
 
     getCard(c) {
-        this.hand.push(c);
+        this.hand.push(c.update("hand", this.seat, this.hand.length));
+    }
+
+    removeHandCardByNumber(number) {
+        const result = Deck.findAndSplice(this.hand, number);
+        this.hand = result.result;
+        return result.splice;
+    }
+
+    playedCard(c) {
+        this.played.push(c.update("played", this.seat, this.played.length));
     }
     /**
      * @param {Player} me
@@ -50,7 +61,7 @@ class Player {
         }
 
         // Get Player Action
-        const action = this.brain.process(me, others, hand, turns);
+        const action = this.brain.process(me, others, Deck.toNumbers(hand), turns);
 
         // Check action.card
         if (!('card' in action)) throw new PlayerActionError(me, action, `{ card : MISSING } ${definition}`);
@@ -75,8 +86,11 @@ class Player {
 
         this.log();
         console.log(action);
-        this.played.push(action.card);
-        this.hand.splice(this.hand.indexOf(action.card),1);
+        // Playing Card
+        const card = this.removeHandCardByNumber(action.card);
+        if (card === undefined) throw new PlayerActionError(me, action, "Could not found chosen card!");
+        this.playedCard(card);
+
         this.log();
 
         return action;
@@ -92,7 +106,7 @@ class Player {
 
     kill() {
         this.killed = true;
-        this.played.push(this.hand.pop());
+        if (this.hand.length >= 1) this.playedCard(this.hand.pop());
     }
 
     getPublicInfo() {
@@ -102,12 +116,15 @@ class Player {
             seat: this.seat,
             killed: this.killed,
             handMaide : this.handMaide,
-            played: Array.from(this.played)
+            played: Deck.toNumbers(this.played)
         };
     }
 
     log() {
-        console.log(`Seat #${this.seat} ${this.name}\tHand: ${this.hand.toString()}\tPlayed: ${this.played.toString()}\t${this.handMaide ? "Handmaide" : ""}${this.killed ? "dead" : ""}`);
+        console.log(`Seat #${this.seat} ${this.name} ` +
+        `\tHand: ${Deck.toNumbers(this.hand).toString()} ` +
+        `\tPlayed: ${Deck.toNumbers(this.played).toString()} ` +
+        `\t${this.handMaide ? "Handmaide" : ""}${this.killed ? "dead" : ""}`);
     }
 }
 

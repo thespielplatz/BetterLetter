@@ -1,4 +1,5 @@
 const PlayerActionError = require('./PlayerActionError.js')
+const Deck = require('./Deck.js')
 
 // Deck
 // 1: 5x Guard
@@ -28,35 +29,6 @@ class Dealer {
         return this.data.turns.length;
     }
 
-    buildDeck() {
-        this.deck = new Array(16);
-        this.deck.fill(1);
-        this.deck.fill(2, 5, 7);
-        this.deck.fill(3, 7, 9);
-        this.deck.fill(4, 9, 11);
-        this.deck.fill(5, 11, 13);
-        this.deck[13] = 6;
-        this.deck[14] = 7;
-        this.deck[15] = 8;
-    }
-
-    shuffleDeck() {
-        let m = this.deck.length;
-        let i, t;
-
-        // While there remain elements to shuffle…
-        while (m) {
-
-            // Pick a remaining element…
-            i = Math.floor(this.gen.seed() * m--);        // <-- MODIFIED LINE
-
-            // And swap it with the current element.
-            t = this.deck[m];
-            this.deck[m] = this.deck[i];
-            this.deck[i] = t;
-        }
-    }
-
     /**
      * @param {Player} p a Player
      */
@@ -72,13 +44,13 @@ class Dealer {
             turnStates : []
         };
 
-        this.buildDeck();
-        this.shuffleDeck();
+        this.deck = new Deck();
+        this.deck.build();
+        this.deck.shuffle(this.gen);
+
         this.internalPlayerIndex = 0;
 
-        this.data.deck = Array.from(this.deck);
-        this.sidecard = this.deck.shift();
-        this.data.sidecard = this.sidecard;
+        this.sidecard = this.deck.shift().update("sidecard");
 
         this.players.forEach((p) => {
             p.reset();
@@ -86,7 +58,7 @@ class Dealer {
             p.getCard(startHand);
 
             let exportedPlayer = p.getPublicInfo();
-            exportedPlayer.startHand = startHand;
+            exportedPlayer.startHand = startHand.number;
             this.data.players.push(exportedPlayer);
         });
 
@@ -103,12 +75,14 @@ class Dealer {
         }
         this.internalPlayerIndex++;
 
+        console.log(`Turn #${this.getTurn() + 1}: ${activePlayer.name}`);
         activePlayer.getCard(this.deck.shift());
 
         let otherPlayers = this.players.filter(p => p.name !== activePlayer.name).map(p => p.getPublicInfo());
         const nonChooseAble = otherPlayers.every((p) => p.killed || p.handMaide);
         if (nonChooseAble) console.log("Non Choose Able!");
 
+        // Process Action
         const action = activePlayer.askAction(otherPlayers, Array.from(activePlayer.hand), Array.from(this.data.turns), nonChooseAble);
 
         if (nonChooseAble && action.card !== 5) {
@@ -133,7 +107,7 @@ class Dealer {
 
         switch (resolvingAction) {
             case 1:
-                if (this.players[action.on].hand[0] == action.has) {
+                if (this.players[action.on].hand[0].is(action.has)) {
                     this.players[action.on].kill();
                     resolve.action = "kill";
                     resolve.seat = action.on;
@@ -141,20 +115,23 @@ class Dealer {
                 break;
 
             case 2:
-                activePlayer.savePriestLook(this.players[action.on].hand[0]);
+                activePlayer.savePriestLook(this.players[action.on].hand[0].number);
                 resolve.action = "look";
                 break;
 
             case 3:
-                if (activePlayer.hand[0] == this.players[action.on].hand[0]) {
+                const aCard = activePlayer.hand[0].number;
+                const oCard = this.players[action.on].hand[0].number;
+
+                if (aCard == oCard) {
                     resolve = "nothing";
                 }
-                if (activePlayer.hand[0] > this.players[action.on].hand[0]) {
+                if (aCard > oCard) {
                     this.players[action.on].kill();
                     resolve.action = "kill";
                     resolve.seat = action.on;
                 }
-                if (activePlayer.hand[0] < this.players[action.on].hand[0]) {
+                if (aCard < oCard) {
                     activePlayer.kill();
                     resolve.action = "kill";
                     resolve.seat = activePlayer.seat;
@@ -166,19 +143,20 @@ class Dealer {
                 break;
 
             case 5:
-                if (this.players[action.on].hand[0] == 8) {
+                if (this.players[action.on].hand[0].is(8)) {
                     this.players[action.on].kill();
                     resolve.action = "kill";
                     resolve.seat = action.on;
 
                 } else {
-                    this.players[action.on].played.push(this.players[action.on].hand.pop());
+                    this.players[action.on].playedCard(this.players[action.on].hand.pop());
                     if (this.deck.length == 0) {
-                        this.players[action.on].hand.push(this.sidecard);
+                        this.players[action.on].getCard(this.sidecard);
+                        this.sidecard = undefined;
                         resolve.action = "sidecard";
 
                     } else {
-                        this.players[action.on].hand.push(this.deck.shift());
+                        this.players[action.on].getCard(this.deck.shift());
                         resolve.action = "deckcard";
                     }
                 }
@@ -188,8 +166,8 @@ class Dealer {
                 const cardA = activePlayer.hand.pop();
                 const cardB = this.players[action.on].hand.pop();
 
-                activePlayer.hand.push(cardB);
-                this.players[action.on].hand.push(cardA);
+                activePlayer.getCard(cardB);
+                this.players[action.on].getCard(cardA);
                 resolve.action = "switchedcards";
                 break;
 
@@ -212,8 +190,7 @@ class Dealer {
 
         this.data.turns.push(turn);
 
-        let turnstate = this.buildTurnState();
-        this.data.turnStates.push(turnstate);
+        //this.data.turnStates.push(this.buildTurnState());
 
     }
 
@@ -248,7 +225,10 @@ class Dealer {
     }
 
     logState() {
-        console.log(`Turn #${this.getTurn() + 1} Sidecard: ${this.sidecard ? this.sidecard : "none"} | Deck(${this.deck ? this.deck.length : "No Deck"}) ${this.deck ? this.deck.toString() : ""}`);
+        console.log(`Turn #${this.getTurn() + 1} ` +
+            `Sidecard: ${this.sidecard ? this.sidecard.number : "none"} ` +
+            `| Deck(${this.deck ? this.deck.cards.length : "No Deck"}) ` +
+            `${this.deck ? this.deck.toString() : ""}`);
         this.players.forEach((p) => p.log());
         console.log(``);
     }
@@ -263,13 +243,25 @@ class Dealer {
 
     buildTurnState() {
         let turnstate = {};
+        let cards = [];
 
+        // deck
+        this.deck.cards.forEach((c) => cards.push(c));
+
+        // sidedeck
+        if (this.sidecard) cards.push(this.sidecard);
+
+        // Player hands and played
         this.players.forEach((p) => {
-            turnstate[p.seat] = {
-                hands : Array.from(p.hand),
-                played : Array.from(p.played)
-            }
+            p.hand.forEach((c) => cards.push(c));
+            p.played.forEach((c) => cards.push(c));
         });
+
+        // Shallow Copy
+        cards = cards.map((c) => Object.assign({}, c));
+
+        turnstate.cards = cards;
+
         return turnstate;
     }
 }
