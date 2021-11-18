@@ -37,7 +37,7 @@ app.set('view engine', 'ntl') // register the template engine
 
 // Default Route
 app.get('/', (req, res) => {
-    res.render("replay", { title: "LetterBot's Replay"});
+    res.render("replay", { title: "LoveBot's Replay"});
 });
 
 // Add 404

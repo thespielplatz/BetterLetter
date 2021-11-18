@@ -13,6 +13,10 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="static/css/general.css">
     <style>
         html, body {
@@ -23,12 +27,10 @@
             padding: 0;
             margin: 0;
             height: 100%;
-            background: linear-gradient(-45deg, #0b6000, #0c5d0c);
-            background-size: 400% 400%;
         }
 
         body {
-            background-color: white;
+            background-color: #0b6000;
         }
     </style>
     <script src="static/lib/jquery-3.6.0.min.js"></script>

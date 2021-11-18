@@ -21,6 +21,7 @@ class Dealer {
         this.data = {};
         this.sidecard = undefined;
         this.internalPlayerIndex = 0;
+        this.turnStates = [];
     }
 
     getTurn() {
@@ -67,7 +68,8 @@ class Dealer {
     start() {
         this.data = {
             turns : [],
-            players : []
+            players : [],
+            turnStates : []
         };
 
         this.buildDeck();
@@ -78,12 +80,23 @@ class Dealer {
         this.sidecard = this.deck.shift();
         this.data.sidecard = this.sidecard;
 
-        this.players.forEach((p) => {
-            this.data.players.push(p.getPublicInfo());
+        let turnstate = {
+            hands : []
+        };
 
+        this.players.forEach((p) => {
             p.reset();
-            p.getCard(this.deck.shift());
+            const startHand = this.deck.shift();
+            p.getCard(startHand);
+
+            let exportedPlayer = p.getPublicInfo();
+            exportedPlayer.startHand = startHand;
+            this.data.players.push(exportedPlayer);
+
+            turnstate.hands.push([startHand]);
         });
+
+        this.data.turnStates.push(turnstate);
     }
 
     playTurn() {
