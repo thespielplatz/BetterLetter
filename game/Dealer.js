@@ -190,7 +190,7 @@ class Dealer {
 
         this.data.turns.push(turn);
 
-        //this.data.turnStates.push(this.buildTurnState());
+        this.data.turnStates.push(this.buildTurnState());
 
     }
 

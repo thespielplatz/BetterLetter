@@ -58,7 +58,13 @@ function preload() {
     nextButton.visible = false;
 
     nextButton.on("pointerdown", () => {
-        nextTurn(scene);
+        turnCounter++;
+        updateScene(scene);
+    });
+
+    backButton.on("pointerdown", () => {
+        turnCounter--;
+        updateScene(scene);
     });
 
     cardimages.forEach(config => {this.load.image(config.texture, config.path);});
@@ -67,11 +73,11 @@ function changeCard(image, card) {
     image.setTexture(cardimages[card].texture);
 }
 
-let deck = [];
+let cards = [];
 let sidecard;
-let Ydeck = 130;
-let Psidecard = { x: 800, y: Ydeck };
-let deckIndex;
+let Pdeck = { x: 600, y: 130, dx : 1, dy : 1};
+let Psidecard = { x: 800, y: Pdeck.y };
+let rectCard = { w: 0, h: 0 }
 
 function create() {
     const scene = this;
@@ -88,55 +94,89 @@ function create() {
     this.add.rectangle(Psidecard.x, Psidecard.y, 140, 180, 0xFFFFFF, 0.3).setStrokeStyle(2, 0xFFFFFF, 1.0);
 
     for (let i = 0; i < 16; i++) {
-        deck.push(new Card(this, 600+i, Ydeck+i));
+        cards.push(new Card(this, Pdeck.x + Pdeck.dx * i, Pdeck.y + Pdeck.dy * i).setData("cardId", i));
     }
-    deckIndex = deck.length - 1;
+
+    rectCard.w = cards[0].displayWidth;
+    rectCard.h = cards[0].displayHeight;
 }
 
 function update() {
 }
+
+let rectPlayer = {
+    margin: 100,
+    w: 300,
+    h: 180,
+    mYName : 120,
+    getX: (seat) => {
+        return rectPlayer.x + (rectPlayer.spacing + rectPlayer.w) * seat;
+    }
+};
 
 function start(scene) {
     // update turn data
 
     // Players
     let playerCount = gamedata.players.length;
-    const r = {
-        m: 100,
-        w: 300,
-        h: 180,
-        mYName : 120
-    };
-    r.s = (scene.sys.game.scale.gameSize.width - 2 * r.m - playerCount * r.w) / (playerCount - 1);
-    r.y = scene.sys.game.scale.gameSize.height - r.h;
-    r.x = r.m + r.w * 0.5
-
-    // Sidecard
-    sidecard = deck[deckIndex];
-    deckIndex--;
-    sidecard.setPosition(Psidecard.x, Psidecard.y);
-    changeCard(sidecard, gamedata.sidecard);
+    rectPlayer.spacing = (scene.sys.game.scale.gameSize.width - 2 * rectPlayer.margin - playerCount * rectPlayer.w) / (playerCount - 1);
+    rectPlayer.y = scene.sys.game.scale.gameSize.height - rectPlayer.h;
+    rectPlayer.x = rectPlayer.margin + rectPlayer.w * 0.5
+    console.log(rectPlayer);
 
     // Player Setup
     gamedata.players.forEach(p => {
-        scene.add.rectangle(r.x, r.y, r.w, r.h, 0xFFFFFF, 0.3).setStrokeStyle(2, 0xFFFFFF, 1.0);
-        scene.add.text(r.x, r.y + r.mYName, p.name, { fontFamily: 'Bebas Neue', fontSize: '25px' }).setOrigin(0.5);
-
-        let starthand = deck[deckIndex];
-        deckIndex--;
-        starthand.setPosition(r.x, r.y);
-        changeCard(starthand, gamedata.turnStates[0][p.seat].hands[0]);
-        scene.children.bringToTop(starthand);
-        r.x += r.s + r.w;
+        scene.add.rectangle(rectPlayer.getX(p.seat), rectPlayer.y, rectPlayer.w, rectPlayer.h, 0xFFFFFF, 0.3).setStrokeStyle(2, 0xFFFFFF, 1.0);
+        scene.add.text(rectPlayer.getX(p.seat), rectPlayer.y + rectPlayer.mYName, p.name, { fontFamily: 'Bebas Neue', fontSize: '25px' }).setOrigin(0.5);
     });
 
-    // UI
-    nextButton.visible = true;
+    // Cards & UI
+    updateScene(scene);
 }
 
-function nextTurn(scene) {
-    if (turnCounter + 1 >= gamedata.turnStates.length) return;
-    turnCounter++;
+function getCard(id) {
+    for (let i = 0; i < cards.length; ++i) {
+        const card = cards[i];
+        if (card.getData("cardId") == id) return card;
+    }
 
+    return undefined;
+}
+
+function updateScene(scene) {
     const turn = gamedata.turnStates[turnCounter];
+    // UI
+    backButton.visible = turnCounter !== 0;
+    nextButton.visible = turnCounter < gamedata.turnStates.length - 1;
+
+    // Cards
+    turn.cards.forEach((c) => {
+        let card = getCard(c.id);
+        scene.children.bringToTop(card);
+
+        switch(c.where) {
+            case "deck":
+                changeCard(card, 0);
+                card.setPosition(Pdeck.x + Pdeck.dx * c.index, Pdeck.y + Pdeck.dy * c.index);
+                break;
+
+            case "sidecard":
+                changeCard(card, c.number);
+                card.setPosition(Psidecard.x, Psidecard.y);
+                break;
+
+            case "hand":
+                changeCard(card, c.number);
+                card.setPosition(rectPlayer.getX(c.seat), rectPlayer.y);
+                break;
+
+            case "played":
+                changeCard(card, c.number);
+                card.setPosition(rectPlayer.getX(c.seat) + (rectCard.w - rectPlayer.w) * 0.5 +  +
+                    rectCard.w * 0.5 * c.index,
+                    rectPlayer.y - rectPlayer.h);
+                break;
+
+        }
+    });
 }

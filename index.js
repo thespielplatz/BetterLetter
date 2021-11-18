@@ -7,7 +7,7 @@ const Player = require('./game/Player.js');
 const Dealer = require('./game/Dealer.js');
 const Brains = require('./game/Brain.js');
 
-const seedword = "LetterBots"
+const seedword = "LetterBots1"
 const gen = new SeedGenerator(seedword);
 
 const b = new Brains.OreganoBrain();
@@ -20,8 +20,6 @@ const dealer = new Dealer(gen);
 dealer.addPlayer(p1);
 dealer.addPlayer(p2);
 dealer.addPlayer(p3);
-
-
 
 let gameBroke = false;
 
@@ -51,7 +49,8 @@ if (gameBroke) {
     console.log("### Game Log");
     dealer.logTurns();
 
-    let file = `./server/static/export/${seedword}.json`;
+    //let file = `./server/static/export/${seedword}.json`;
+    let file = `./server/static/export/LetterBots.json`;
 
     let data = JSON.stringify(dealer.data, null, 4);
     fs.writeFileSync(file, data, (err) => {

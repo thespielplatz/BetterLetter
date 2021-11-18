@@ -1,18 +1,16 @@
 class Card {
-    static staticCounter = 0;
-
     /**
+     * @param {Number} id The value of the card
      * @param {Number} number The value of the card
      * @param {String} where Where is the card
      * @param {Number} index index depending on the where
      */
-    constructor(number, where, index) {
+    constructor(id, number, where, index) {
+        this.id = id;
         this.number = number;
         this.where = where;
         this.index = index;
         this.seat = -1;
-        this.id = Card.staticCounter;
-        Card.staticCounter++;
     }
 
     /**
@@ -60,7 +58,7 @@ class Deck {
                 case 14: number = 7; break;
                 case 15: number = 8; break;
             }
-            return new Card(number, "deck", i);
+            return new Card(i, number, "deck", i);
         });
     }
     /**
@@ -80,6 +78,9 @@ class Deck {
             this.cards[m] = this.cards[i];
             this.cards[i] = t;
         }
+
+        // Rebuild displayindex
+        this.cards.forEach((c, i) => c.index = i);
     }
 
     shift() {
