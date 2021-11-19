@@ -191,11 +191,10 @@ class Dealer {
         this.data.turns.push(turn);
 
         this.data.turnStates.push(this.buildTurnState());
-
     }
 
     isGameRunning() {
-        if (this.deck.length <= 0) return false;
+        if (this.deck.length() <= 0) return false;
         const alivePlayers = this.players.reduce((count, p) => {
             return count + (p.killed ? 0 : 1);
         }, 0);
@@ -243,24 +242,10 @@ class Dealer {
 
     buildTurnState() {
         let turnstate = {};
-        let cards = [];
 
-        // deck
-        this.deck.cards.forEach((c) => cards.push(c));
-
-        // sidedeck
-        if (this.sidecard) cards.push(this.sidecard);
-
-        // Player hands and played
-        this.players.forEach((p) => {
-            p.hand.forEach((c) => cards.push(c));
-            p.played.forEach((c) => cards.push(c));
-        });
-
-        // Shallow Copy
-        cards = cards.map((c) => Object.assign({}, c));
-
-        turnstate.cards = cards;
+        // Save Card Changes
+        turnstate.cards = Deck.Card.animationStack;
+        Deck.Card.animationStack = [];
 
         return turnstate;
     }

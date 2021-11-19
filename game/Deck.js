@@ -1,4 +1,6 @@
 class Card {
+    static animationCounter = 0;
+    static animationStack = [];
     /**
      * @param {Number} id The value of the card
      * @param {Number} number The value of the card
@@ -11,6 +13,7 @@ class Card {
         this.where = where;
         this.index = index;
         this.seat = -1;
+        this.animationIndex = Card.animationCounter++;
     }
 
     /**
@@ -19,9 +22,17 @@ class Card {
      * @param {Number} index index depending on the where
      */
     update(where, seat, index) {
-        this.where = where;
+        this.lastSeat = this.seat;
+        this.lastWhere = this.where;
+        this.lastIndex = this.index;
+
         this.seat = seat;
+        this.where = where;
         this.index = index;
+
+        this.animationIndex = Card.animationCounter++;
+
+        Card.animationStack.push(Object.assign({}, this));
 
         return this;
     }
@@ -40,6 +51,7 @@ class Deck {
 
     constructor() {
         this.cards = [];
+        this.allCards = [];
     }
 
     build() {
@@ -58,7 +70,9 @@ class Deck {
                 case 14: number = 7; break;
                 case 15: number = 8; break;
             }
-            return new Card(i, number, "deck", i);
+            const card = new Card(i, number, "deck", i);
+            this.allCards.push(card);
+            return card;
         });
     }
     /**
@@ -80,11 +94,15 @@ class Deck {
         }
 
         // Rebuild displayindex
-        this.cards.forEach((c, i) => c.index = i);
+        this.cards.forEach((c, i) => c.index = this.cards.length - 1 - i);
     }
 
     shift() {
         return this.cards.shift();
+    }
+
+    length() {
+        return this.cards.length;
     }
 
     toString() {

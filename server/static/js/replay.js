@@ -78,9 +78,11 @@ let sidecard;
 let Pdeck = { x: 600, y: 130, dx : 1, dy : 1};
 let Psidecard = { x: 800, y: Pdeck.y };
 let rectCard = { w: 0, h: 0 }
+let scene = undefined;
+
 
 function create() {
-    const scene = this;
+    scene = this;
     turnText = this.add.text(0, 10, "Loading Data ...");
 
     $.getJSON("static/export/LetterBots.json", function(json) {
@@ -143,40 +145,111 @@ function getCard(id) {
     return undefined;
 }
 
+let displaySort = [];
+let cardIndex = 0;
+let currentTurn = undefined;
+
 function updateScene(scene) {
-    const turn = gamedata.turnStates[turnCounter];
+    console.log(`Update Scene | Turn #${turnCounter}`);
+    currentTurn = gamedata.turnStates[turnCounter];
+
     // UI
-    backButton.visible = turnCounter !== 0;
+    //backButton.visible = turnCounter !== 0;
     nextButton.visible = turnCounter < gamedata.turnStates.length - 1;
 
-    // Cards
-    turn.cards.forEach((c) => {
-        let card = getCard(c.id);
-        scene.children.bringToTop(card);
-
-        switch(c.where) {
-            case "deck":
-                changeCard(card, 0);
-                card.setPosition(Pdeck.x + Pdeck.dx * c.index, Pdeck.y + Pdeck.dy * c.index);
-                break;
-
-            case "sidecard":
-                changeCard(card, c.number);
-                card.setPosition(Psidecard.x, Psidecard.y);
-                break;
-
-            case "hand":
-                changeCard(card, c.number);
-                card.setPosition(rectPlayer.getX(c.seat), rectPlayer.y);
-                break;
-
-            case "played":
-                changeCard(card, c.number);
-                card.setPosition(rectPlayer.getX(c.seat) + (rectCard.w - rectPlayer.w) * 0.5 +  +
-                    rectCard.w * 0.5 * c.index,
-                    rectPlayer.y - rectPlayer.h);
-                break;
-
-        }
+    // Animation Order
+    currentTurn.cards = currentTurn.cards.sort((c1, c2) => {
+        if (c1.animationIndex === c2.animationIndex) return 0;
+        return c1.animationIndex > c2.animationIndex ? 1 : -1;
     });
+
+    // Sorting
+    displaySort = [];
+
+    cardIndex = 0;
+    processCard();
+}
+
+let extraStep = false;
+function processCard() {
+    if (cardIndex >= currentTurn.cards.length) {
+        return;
+    }
+
+    const c = currentTurn.cards[cardIndex];
+    cardIndex++;
+
+    let card = getCard(c.id);
+    scene.children.bringToTop(card);
+
+    let where = c.where;
+    let x, y;
+    let number = c.number;
+    let animation = c.lastWhere != c.where;
+
+    if (extraStep) {
+        extraStep = false;
+    } else {
+        if (c.lastWhere == "deck" && c.where == "played") {
+            where = "hand";
+            cardIndex--;
+            extraStep = true;
+        }
+    }
+
+    if (animation) console.log(c);
+    switch(where) {
+        case "deck":
+            x = Pdeck.x + Pdeck.dx * c.index;
+            y = Pdeck.y + Pdeck.dy * c.index;
+            number = 0;
+            displaySort.push({ index: c.index, card: card });
+            break;
+
+        case "sidecard":
+            x = Psidecard.x;
+            y = Psidecard.y;
+            break;
+
+        case "hand":
+            x = rectPlayer.getX(c.seat);
+            y = rectPlayer.y;
+            break;
+
+        case "played":
+            x = rectPlayer.getX(c.seat) + (rectCard.w - rectPlayer.w) * 0.5 + rectCard.w * 0.5 * c.index;
+            y = rectPlayer.y - rectPlayer.h;
+            break;
+    }
+
+    animateCard(card, number, x, y, animation);
+}
+
+function animateCard(card, number, x, y, animation) {
+    changeCard(card, number);
+
+    if (animation === false) {
+        card.setPosition(x, y);
+        processCard();
+        return;
+    }
+
+    var tween = scene.tweens.add({
+        targets: card,
+        x: x,
+        y: y,
+        ease: 'Cubic',       // 'Cubic', 'Elastic', 'Bounce', 'Back'
+        duration: 500,
+        repeat: 0,            // -1: infinity
+        yoyo: false
+    });
+    setTimeout(processCard, 500);
+}
+
+function updateSceneFinished() {
+    // Set Display index
+    displaySort.sort((c1, c2) => {
+        if (c1.index === c2.index) return 0;
+        return c1.index > c2.index ? 1 : -1;
+    }).forEach((card) => scene.children.bringToTop(card.card));
 }
