@@ -48,6 +48,8 @@ let cardimages = [
 ];
 
 let backButton, nextButton;
+let currentTurn = undefined;
+let turnDirection = 1;
 
 function preload() {
     const scene = this;
@@ -58,12 +60,20 @@ function preload() {
     nextButton.visible = false;
 
     nextButton.on("pointerdown", () => {
-        turnCounter++;
+        if (turnDirection !== 1) {
+            turnDirection = 1;
+        } else {
+            turnCounter++;
+        }
         updateScene(scene);
     });
 
     backButton.on("pointerdown", () => {
-        turnCounter--;
+        if (turnDirection !== -1) {
+            turnDirection = -1;
+        } else {
+            turnCounter--;
+        }
         updateScene(scene);
     });
 
@@ -79,7 +89,6 @@ let Pdeck = { x: 600, y: 130, dx : 1, dy : 1};
 let Psidecard = { x: 800, y: Pdeck.y };
 let rectCard = { w: 0, h: 0 }
 let scene = undefined;
-
 
 function create() {
     scene = this;
@@ -111,10 +120,13 @@ let rectPlayer = {
     w: 300,
     h: 180,
     mYName : 120,
+    mYCall : -105,
     getX: (seat) => {
         return rectPlayer.x + (rectPlayer.spacing + rectPlayer.w) * seat;
     }
 };
+
+let playerCalls = [];
 
 function start(scene) {
     // update turn data
@@ -130,6 +142,8 @@ function start(scene) {
     gamedata.players.forEach(p => {
         scene.add.rectangle(rectPlayer.getX(p.seat), rectPlayer.y, rectPlayer.w, rectPlayer.h, 0xFFFFFF, 0.3).setStrokeStyle(2, 0xFFFFFF, 1.0);
         scene.add.text(rectPlayer.getX(p.seat), rectPlayer.y + rectPlayer.mYName, p.name, { fontFamily: 'Bebas Neue', fontSize: '25px' }).setOrigin(0.5);
+        const callText = scene.add.text(rectPlayer.getX(p.seat), rectPlayer.y + rectPlayer.mYCall, "", { fontFamily: 'Bebas Neue', fontSize: '20px' }).setOrigin(0.5);
+        playerCalls.push(callText);
     });
 
     // Cards & UI
@@ -147,14 +161,14 @@ function getCard(id) {
 
 let displaySort = [];
 let cardIndex = 0;
-let currentTurn = undefined;
 
 function updateScene(scene) {
+    turnText.text = `Turn #${turnCounter}`;
     console.log(`Update Scene | Turn #${turnCounter}`);
     currentTurn = gamedata.turnStates[turnCounter];
 
     // UI
-    //backButton.visible = turnCounter !== 0;
+    backButton.visible = turnCounter !== 0;
     nextButton.visible = turnCounter < gamedata.turnStates.length - 1;
 
     // Animation Order
@@ -163,39 +177,71 @@ function updateScene(scene) {
         return c1.animationIndex > c2.animationIndex ? 1 : -1;
     });
 
+    // Clearing Call Texts
+    playerCalls.forEach(t => t.setText(""));
+
     // Sorting
     displaySort = [];
 
-    cardIndex = 0;
-    processCard();
+    cardIndex = (turnDirection == 1 ? 0 : currentTurn.cards.length -1);
+    processAnimationStep();
 }
 
-let extraStep = false;
-function processCard() {
-    if (cardIndex >= currentTurn.cards.length) {
-        return;
-    }
+function processAnimationStep() {
+    if (turnDirection == 1 && cardIndex >= currentTurn.cards.length) return;
+    if (turnDirection == -1 && cardIndex < 0) return;
 
     const c = currentTurn.cards[cardIndex];
-    cardIndex++;
+    cardIndex += turnDirection;
 
+    if ("data" in c) {
+        if (c.data === "winner") {
+            playerCalls[c.seat].setText("WIN");
+            processAnimationStep();
+        }
+        return;
+    }
+    if ("name" in c) {
+        processPlayerAction(c);
+        return;
+    }
+    if ("id" in c) {
+        processCard(c);
+        return;
+    }
+}
+
+function processPlayerAction(action) {
+    if (turnDirection == -1) {
+        processAnimationStep();
+        return;
+    }
+    let text = `I am playing ${action.card}`;
+    if ("on" in action) text += ` on ${gamedata.players[action.on].name}`;
+    if ("has" in action) text += `. It's a ${action.has}`;
+
+    playerCalls[action.seat].setText(text);
+    setTimeout(processAnimationStep, 500);
+}
+
+function processCard(c) {
     let card = getCard(c.id);
     scene.children.bringToTop(card);
 
-    let where = c.where;
     let x, y;
+
+    let where = c.where;
+    let seat = c.seat;
+    let index = c.index;
+
+    if (turnDirection == -1) {
+        where = c.lastWhere;
+        seat = c.lastSeat;
+        index = c.lastIndex;
+    }
+
     let number = c.number;
     let animation = c.lastWhere != c.where;
-
-    if (extraStep) {
-        extraStep = false;
-    } else {
-        if (c.lastWhere == "deck" && c.where == "played") {
-            where = "hand";
-            cardIndex--;
-            extraStep = true;
-        }
-    }
 
     if (animation) console.log(c);
     switch(where) {
@@ -203,7 +249,7 @@ function processCard() {
             x = Pdeck.x + Pdeck.dx * c.index;
             y = Pdeck.y + Pdeck.dy * c.index;
             number = 0;
-            displaySort.push({ index: c.index, card: card });
+            displaySort.push({ index :index, card: card });
             break;
 
         case "sidecard":
@@ -212,13 +258,13 @@ function processCard() {
             break;
 
         case "hand":
-            x = rectPlayer.getX(c.seat);
+            x = rectPlayer.getX(seat);
             y = rectPlayer.y;
             break;
 
         case "played":
-            x = rectPlayer.getX(c.seat) + (rectCard.w - rectPlayer.w) * 0.5 + rectCard.w * 0.5 * c.index;
-            y = rectPlayer.y - rectPlayer.h;
+            x = rectPlayer.getX(seat) + (rectCard.w - rectPlayer.w) * 0.5 + rectCard.w * 0.5 * index;
+            y = rectPlayer.y - rectPlayer.h - 25;
             break;
     }
 
@@ -230,20 +276,22 @@ function animateCard(card, number, x, y, animation) {
 
     if (animation === false) {
         card.setPosition(x, y);
-        processCard();
+        processAnimationStep();
         return;
     }
+
+    const duration = (turnDirection == 1 ? 500 : 100);
 
     var tween = scene.tweens.add({
         targets: card,
         x: x,
         y: y,
         ease: 'Cubic',       // 'Cubic', 'Elastic', 'Bounce', 'Back'
-        duration: 500,
+        duration: duration,
         repeat: 0,            // -1: infinity
         yoyo: false
     });
-    setTimeout(processCard, 500);
+    setTimeout(processAnimationStep, duration);
 }
 
 function updateSceneFinished() {

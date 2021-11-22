@@ -40,7 +40,7 @@ class OreganoBrain extends Brain {
 
         switch (card) {
             case 1:
-                return { card : card,  on : randomSeat, has : Math.floor(Math.random() * 8) + 1};
+                return { card : card,  on : randomSeat, has : Math.floor(Math.random() * 7) + 2};
 
             case 2:
             case 3:

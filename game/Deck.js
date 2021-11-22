@@ -14,6 +14,10 @@ class Card {
         this.index = index;
         this.seat = -1;
         this.animationIndex = Card.animationCounter++;
+
+        this.lastSeat = this.seat;
+        this.lastWhere = this.where;
+        this.lastIndex = this.index;
     }
 
     /**

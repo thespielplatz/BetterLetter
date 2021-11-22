@@ -86,6 +86,11 @@ class Player {
 
         this.log();
         console.log(action);
+
+        Deck.Card.animationStack.push({...action,
+            ...this.getPublicInfo(),
+            animationIndex: Deck.Card.animationCounter++});
+
         // Playing Card
         const card = this.removeHandCardByNumber(action.card);
         if (card === undefined) throw new PlayerActionError(me, action, "Could not found chosen card!");

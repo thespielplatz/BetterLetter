@@ -97,6 +97,10 @@ class Dealer {
             }
         }
 
+        if ('has' in action) {
+            if (action.has < 2 || action.has > 8) throw new PlayerActionError(activePlayer, action, `A call is only valid 2 till 8 (You called: ${action.has})`);
+        }
+
         // Resolve Turn
         let resolve = { action : "nothing"};
         let resolvingAction = action.card;
@@ -205,6 +209,7 @@ class Dealer {
     }
 
     checkWin() {
+
         let winOrder = this.players.map(p => {
             let player = { killed: p.killed, seat: p.seat, name: p.name};
             if (!p.killed) player.lastHand = p.hand[0];
@@ -219,6 +224,22 @@ class Dealer {
         });
 
         this.data.win = Array.from(winOrder);
+
+
+        let bestHand = 0;
+        let lastTurnState = this.data.turnStates[this.data.turnStates.length - 1];
+        this.data.win.forEach(p => {
+            if (bestHand > p.lastHand) return;
+            bestHand = p.lastHand;
+            if (!p.killed) {
+                lastTurnState.cards.push({
+                    "data" : "winner",
+                    ...p,
+                    animationIndex: Deck.Card.animationCounter++
+                })
+            }
+        });
+
 
         return winOrder;
     }
