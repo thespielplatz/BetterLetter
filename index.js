@@ -6,7 +6,7 @@ const OreganoBrain = require('./game/brains/OreganoBrain.js');
 const PlayerActionError = require('./game/PlayerActionError.js');
 const AR = require('./game/AnimationRecorder.js').getSingleton();
 
-const seedword = "LetterBots1"
+const seedword = "LetterBots1";
 
 const brain = new OreganoBrain();
 const p1 = new Player("Luxx", brain);
