@@ -207,6 +207,12 @@ function processAnimationStep() {
         processCard(c);
         return;
     }
+
+    if (c.animation === "error") {
+        window.alert(JSON.stringify(c));
+        processAnimationStep();
+        return;
+    }
 }
 
 function processPlayerAction(action) {
