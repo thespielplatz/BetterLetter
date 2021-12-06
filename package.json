@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "run": "node index.js",
-    "server": "node server/server.js",
+    "play": "node index.js",
+    "view": "node server/server.js",
     "practice": "node practice.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

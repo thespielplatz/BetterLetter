@@ -1,5 +1,6 @@
 const PlayerActionError = require('./PlayerActionError.js')
 const Deck = require('./Deck.js')
+const AR = require('./AnimationRecorder.js').getSingleton();
 
 class Player {
     /**
@@ -87,9 +88,7 @@ class Player {
         this.log();
         console.log(action);
 
-        Deck.Card.animationStack.push({...action,
-            ...this.getPublicInfo(),
-            animationIndex: Deck.Card.animationCounter++});
+        AR.action(action, this.getPublicInfo());
 
         // Playing Card
         const card = this.removeHandCardByNumber(action.card);

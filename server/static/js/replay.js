@@ -165,11 +165,11 @@ let cardIndex = 0;
 function updateScene(scene) {
     turnText.text = `Turn #${turnCounter}`;
     console.log(`Update Scene | Turn #${turnCounter}`);
-    currentTurn = gamedata.turnStates[turnCounter];
+    currentTurn = gamedata.turnAnimations[turnCounter];
 
     // UI
     backButton.visible = turnCounter !== 0;
-    nextButton.visible = turnCounter < gamedata.turnStates.length - 1;
+    nextButton.visible = turnCounter < gamedata.turnAnimations.length - 1;
 
     // Animation Order
     currentTurn.cards = currentTurn.cards.sort((c1, c2) => {

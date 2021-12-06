@@ -6,6 +6,7 @@ const SeedGenerator = require('./tools/Seed.js');
 const Player = require('./game/Player.js');
 const Dealer = require('./game/Dealer.js');
 const Brains = require('./game/Brain.js');
+const AR = require('./game/AnimationRecorder.js').getSingleton();
 
 const seedword = "LetterBots1"
 const gen = new SeedGenerator(seedword);
@@ -31,6 +32,8 @@ while (dealer.isGameRunning()) {
     try {
         dealer.playTurn();
     } catch (e) {
+        AR.error(e);
+
         console.log("### Game Broke");
         console.log(e);
         gameBroke = true;

@@ -1,5 +1,6 @@
 const PlayerActionError = require('./PlayerActionError.js')
 const Deck = require('./Deck.js')
+const AR = require('./AnimationRecorder.js').getSingleton();
 
 // Deck
 // 1: 5x Guard
@@ -41,7 +42,6 @@ class Dealer {
         this.data = {
             turns : [],
             players : [],
-            turnStates : []
         };
 
         this.deck = new Deck();
@@ -54,18 +54,21 @@ class Dealer {
 
         this.players.forEach((p) => {
             p.reset();
+
             const startHand = this.deck.shift();
             p.getCard(startHand);
 
             let exportedPlayer = p.getPublicInfo();
             exportedPlayer.startHand = startHand.number;
-            this.data.players.push(exportedPlayer);
+
+            AR.addPlayer(exportedPlayer);
         });
 
-        this.data.turnStates.push(this.buildTurnState());
+        AR.nextTurn();
     }
 
     playTurn() {
+
         let activePlayer;
         let foundPlayer = false
         while (!foundPlayer) {
@@ -193,8 +196,9 @@ class Dealer {
         };
 
         this.data.turns.push(turn);
+        AR.addTurnInfo(turn);
 
-        this.data.turnStates.push(this.buildTurnState());
+        AR.nextTurn();
     }
 
     isGameRunning() {
@@ -210,6 +214,7 @@ class Dealer {
 
     checkWin() {
 
+        // Sort Players by last hand and killed
         let winOrder = this.players.map(p => {
             let player = { killed: p.killed, seat: p.seat, name: p.name};
             if (!p.killed) player.lastHand = p.hand[0];
@@ -225,21 +230,15 @@ class Dealer {
 
         this.data.win = Array.from(winOrder);
 
-
         let bestHand = 0;
-        let lastTurnState = this.data.turnStates[this.data.turnStates.length - 1];
+
         this.data.win.forEach(p => {
             if (bestHand > p.lastHand) return;
             bestHand = p.lastHand;
             if (!p.killed) {
-                lastTurnState.cards.push({
-                    "data" : "winner",
-                    ...p,
-                    animationIndex: Deck.Card.animationCounter++
-                })
+                AR.winner(p);
             }
         });
-
 
         return winOrder;
     }
@@ -259,16 +258,6 @@ class Dealer {
             console.log(`Resolve: ${JSON.stringify(t.resolve)}`);
         });
         console.log(``);
-    }
-
-    buildTurnState() {
-        let turnstate = {};
-
-        // Save Card Changes
-        turnstate.cards = Deck.Card.animationStack;
-        Deck.Card.animationStack = [];
-
-        return turnstate;
     }
 }
 

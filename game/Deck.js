@@ -1,6 +1,6 @@
+const AR = require('./AnimationRecorder.js').getSingleton();
+
 class Card {
-    static animationCounter = 0;
-    static animationStack = [];
     /**
      * @param {Number} id The value of the card
      * @param {Number} number The value of the card
@@ -13,11 +13,12 @@ class Card {
         this.where = where;
         this.index = index;
         this.seat = -1;
-        this.animationIndex = Card.animationCounter++;
 
         this.lastSeat = this.seat;
         this.lastWhere = this.where;
         this.lastIndex = this.index;
+
+        AR.card(this);
     }
 
     /**
@@ -34,9 +35,7 @@ class Card {
         this.where = where;
         this.index = index;
 
-        this.animationIndex = Card.animationCounter++;
-
-        Card.animationStack.push(Object.assign({}, this));
+        AR.card(this);
 
         return this;
     }
