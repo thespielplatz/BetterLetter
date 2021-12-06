@@ -244,6 +244,8 @@ class Dealer {
             }
         });
 
+        AR.nextTurn();
+
         return winOrder;
     }
 

@@ -48,7 +48,7 @@ let cardimages = [
 ];
 
 let backButton, nextButton;
-let currentTurn = undefined;
+let turnAnimations = undefined;
 let turnDirection = 1;
 
 function preload() {
@@ -165,14 +165,14 @@ let cardIndex = 0;
 function updateScene(scene) {
     turnText.text = `Turn #${turnCounter}`;
     console.log(`Update Scene | Turn #${turnCounter}`);
-    currentTurn = gamedata.turnAnimations[turnCounter];
+    turnAnimations = gamedata.turnAnimations[turnCounter];
 
     // UI
     backButton.visible = turnCounter !== 0;
     nextButton.visible = turnCounter < gamedata.turnAnimations.length - 1;
 
     // Animation Order
-    currentTurn.cards = currentTurn.cards.sort((c1, c2) => {
+    turnAnimations = turnAnimations.sort((c1, c2) => {
         if (c1.animationIndex === c2.animationIndex) return 0;
         return c1.animationIndex > c2.animationIndex ? 1 : -1;
     });
@@ -183,29 +183,27 @@ function updateScene(scene) {
     // Sorting
     displaySort = [];
 
-    cardIndex = (turnDirection == 1 ? 0 : currentTurn.cards.length -1);
+    cardIndex = (turnDirection == 1 ? 0 : turnAnimations.length -1);
     processAnimationStep();
 }
 
 function processAnimationStep() {
-    if (turnDirection == 1 && cardIndex >= currentTurn.cards.length) return;
+    if (turnDirection == 1 && cardIndex >= turnAnimations.length) return;
     if (turnDirection == -1 && cardIndex < 0) return;
 
-    const c = currentTurn.cards[cardIndex];
+    const c = turnAnimations[cardIndex];
     cardIndex += turnDirection;
 
-    if ("data" in c) {
-        if (c.data === "winner") {
-            playerCalls[c.seat].setText("WIN");
-            processAnimationStep();
-        }
+    if (c.animation === "winner") {
+        playerCalls[c.seat].setText("WIN");
+        processAnimationStep();
         return;
     }
-    if ("name" in c) {
+    if (c.animation === "action") {
         processPlayerAction(c);
         return;
     }
-    if ("id" in c) {
+    if (c.animation === "card") {
         processCard(c);
         return;
     }

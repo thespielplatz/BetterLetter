@@ -1,5 +1,6 @@
 let NAME = require('../package.json').name;
 let VERSION = require('../package.json').version;
+const PORT = 3000;
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -45,7 +46,7 @@ app.use((req, res, next) => {
     res.status(404).render("error", { title: "404", 'message' : `Page not found 🤔<br><span style="font-style: normal;">${req.method} ${req.path}</span>` });
 });
 
-app.listen(3000, () => { // Listen on port 3000
-    console.log('Listening!') // Log when listen success
+app.listen(PORT, () => { // Listen on port 3000
+    console.log(`Listening on ${PORT}`) // Log when listen success
 })
 
