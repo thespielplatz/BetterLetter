@@ -4,7 +4,7 @@ class Brain {
      * @param {Array} others
      * @param {Array} hand
      * @param {Array} turns
-     * @return { card: Number, call: String }
+     * @return { card: Number, on: Number, has: Number }
      */
     process(me, others, hand, turns) {
 
