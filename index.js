@@ -1,22 +1,19 @@
 const fs = require('fs');
 
-const SeedGenerator = require('./tools/Seed.js');
-
 const Player = require('./game/Player.js');
 const Dealer = require('./game/Dealer.js');
-const Brains = require('./game/Brain.js');
+const OreganoBrain = require('./game/brains/OreganoBrain.js');
 const PlayerActionError = require('./game/PlayerActionError.js');
 const AR = require('./game/AnimationRecorder.js').getSingleton();
 
 const seedword = "LetterBots1"
-const gen = new SeedGenerator(seedword);
 
-const b = new Brains.OreganoBrain();
-const p1 = new Player("Luxx", b, gen);
-const p2 = new Player("Tom", b, gen);
-const p3 = new Player("Fil", b, gen);
+const brain = new OreganoBrain();
+const p1 = new Player("Luxx", brain);
+const p2 = new Player("Tom", brain);
+const p3 = new Player("Fil", brain);
 
-const dealer = new Dealer(gen);
+const dealer = new Dealer(seedword);
 
 dealer.addPlayer(p1);
 dealer.addPlayer(p2);

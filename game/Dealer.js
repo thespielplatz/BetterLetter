@@ -1,5 +1,6 @@
 const PlayerActionError = require('./PlayerActionError.js')
 const Deck = require('./Deck.js')
+const SeedGenerator = require("../tools/Seed.js");
 const AR = require('./AnimationRecorder.js').getSingleton();
 
 // Deck
@@ -14,10 +15,10 @@ const AR = require('./AnimationRecorder.js').getSingleton();
 
 class Dealer {
     /**
-     * @param {SeedGenerator} seedGenerator The SeedGenerator
+     * @param {String} seed The word "String" for the SeedGenerator
      */
-    constructor(seedGenerator) {
-        this.gen = seedGenerator
+    constructor(seed) {
+        this.gen = new SeedGenerator(seed);
         this.deck = undefined;
         this.players = [];
         this.data = {};

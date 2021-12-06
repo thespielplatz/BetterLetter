@@ -6,12 +6,10 @@ class Player {
     /**
      * @param {string} name The name of the player
      * @param {Brain} brain The Brain of the player
-     * @param {SeedGenerator} seedGenerator The SeedGenerator
      */
-    constructor(name, brain, seedGenerator) {
+    constructor(name, brain) {
         this.name = name;
         this.brain = brain;
-        this.gen = seedGenerator;
         this.seat = -1;
         this.points = 0;
 
