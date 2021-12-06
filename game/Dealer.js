@@ -212,7 +212,7 @@ class Dealer {
         return true;
     }
 
-    checkWin() {
+    calculateWinners() {
 
         // Sort Players by last hand and killed
         let winOrder = this.players.map(p => {

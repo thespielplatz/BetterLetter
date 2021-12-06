@@ -1,4 +1,3 @@
-console.log("main.js");
 const fs = require('fs');
 
 const SeedGenerator = require('./tools/Seed.js');
@@ -6,6 +5,7 @@ const SeedGenerator = require('./tools/Seed.js');
 const Player = require('./game/Player.js');
 const Dealer = require('./game/Dealer.js');
 const Brains = require('./game/Brain.js');
+const PlayerActionError = require('./game/PlayerActionError.js');
 const AR = require('./game/AnimationRecorder.js').getSingleton();
 
 const seedword = "LetterBots1"
@@ -32,11 +32,17 @@ while (dealer.isGameRunning()) {
     try {
         dealer.playTurn();
     } catch (e) {
-        AR.error(e);
+        if (e instanceof PlayerActionError) {
+            console.log("### Player Error");
+            AR.error(e);
+        } else {
+            console.log("### Game Broke --> Exception");
+            console.log(e);
+            gameBroke = true;
+        }
 
-        console.log("### Game Broke");
         console.log(e);
-        gameBroke = true;
+
         break;
     }
 }
@@ -46,7 +52,7 @@ if (gameBroke) {
 
 } else {
     console.log("### Game Ended");
-    let winOrder = dealer.checkWin();
+    let winOrder = dealer.calculateWinners();
     console.log(winOrder);
     dealer.logState();
     console.log("### Game Log");
@@ -55,7 +61,7 @@ if (gameBroke) {
     //let file = `./server/static/export/${seedword}.json`;
     let file = `./server/static/export/LetterBots.json`;
 
-    let data = JSON.stringify(dealer.data, null, 4);
+    let data = JSON.stringify(AR.export(), null, 4);
     fs.writeFileSync(file, data, (err) => {
         if (err) throw err;
         console.log('Data written to file');

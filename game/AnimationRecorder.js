@@ -30,29 +30,29 @@ class AnimationRecorder {
     }
 
     card(card) {
-        this.turnAnimations.push(Object.assign({}, card, {
+        this.animationStack.push(Object.assign({}, card, {
             animation: "card",
             animationIndex: this.animationCounter++
         }));
     }
 
     action(action, player) {
-        this.turnAnimations.push(Object.assign({...player}, action, {
+        this.animationStack.push(Object.assign({...player}, action, {
             animation: "action",
             animationIndex: this.animationCounter++
         }));
     }
 
     winner(winner) {
-        this.turnAnimations.push(Object.assign({}, winner, {
+        this.animationStack.push(Object.assign({}, winner, {
             animation: "winner",
             animationIndex: this.animationCounter++
         }));
     }
 
     nextTurn() {
-        this.turnAnimations.push(this.turnAnimations);
-        this.animationStack = 0;
+        this.turnAnimations.push(this.animationStack);
+        this.animationStack = [];
         this.animationCounter = 0;
     }
 
