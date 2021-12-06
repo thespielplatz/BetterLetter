@@ -26,11 +26,14 @@ let gameBroke = false;
 
 console.log(`### Game Start with Seedword ${seedword}`);
 dealer.start();
+console.log(`\n`);
 
 while (dealer.isGameRunning()) {
-    dealer.logState();
     try {
+        dealer.logState();
         dealer.playTurn();
+        console.log(`\n`);
+
     } catch (e) {
         if (e instanceof PlayerActionError) {
             console.log("### Player Error");
@@ -53,10 +56,15 @@ if (gameBroke) {
 } else {
     console.log("### Game Ended");
     let winOrder = dealer.calculateWinners();
-    console.log(winOrder);
-    dealer.logState();
-    console.log("### Game Log");
-    dealer.logTurns();
+
+    let winningCard = 1;
+    winOrder.forEach(p => {
+        let state = ("lastHand" in p ? `Hand: ${p.lastHand}` : `killed:${p.killed}`);
+        console.log(`${p.winner ? "WIN " : "LOST"} Seat:${p.seat} ${p.name} ${state}`);
+    });
+
+    console.log(`\n`);
+    console.log("### Game Export");
 
     //let file = `./server/static/export/${seedword}.json`;
     let file = `./server/static/export/LetterBots.json`;

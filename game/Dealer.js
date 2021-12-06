@@ -78,7 +78,7 @@ class Dealer {
         }
         this.internalPlayerIndex++;
 
-        console.log(`Turn #${this.getTurn() + 1}: ${activePlayer.name}`);
+        console.log(`Active Player: ${activePlayer.name}`);
         activePlayer.getCard(this.deck.shift());
 
         let otherPlayers = this.players.filter(p => p.name !== activePlayer.name).map(p => p.getPublicInfo());
@@ -86,12 +86,13 @@ class Dealer {
         if (nonChooseAble) console.log("Non Choose Able!");
 
         // Process Action
+        activePlayer.log();
         const action = activePlayer.askAction(otherPlayers, Array.from(activePlayer.hand), Array.from(this.data.turns), nonChooseAble);
 
         if (nonChooseAble && action.card !== 5) {
-            console.log(`${activePlayer.name} played ${action.card}`);
+            console.log(`Action: ${activePlayer.name} played ${action.card}`);
         } else {
-            console.log(`${activePlayer.name} played ${action.card}${('on' in action ? ` on ${this.players[action.on].name}` : '')}${('has' in action ? ` has ${action.has}` : '')}`);
+            console.log(`Action: ${activePlayer.name} played ${action.card}${('on' in action ? ` on ${this.players[action.on].name}` : '')}${('has' in action ? ` has ${action.has}` : '')}`);
 
             // Check if target is suitable
             if ('on' in action) {
@@ -160,11 +161,11 @@ class Dealer {
                     if (this.deck.length == 0) {
                         this.players[action.on].getCard(this.sidecard);
                         this.sidecard = undefined;
-                        resolve.action = "sidecard";
+                        resolve.action = "switch_sidecard";
 
                     } else {
                         this.players[action.on].getCard(this.deck.shift());
-                        resolve.action = "deckcard";
+                        resolve.action = "switch_deckcard";
                     }
                 }
                 break;
@@ -217,7 +218,7 @@ class Dealer {
         // Sort Players by last hand and killed
         let winOrder = this.players.map(p => {
             let player = { killed: p.killed, seat: p.seat, name: p.name};
-            if (!p.killed) player.lastHand = p.hand[0];
+            if (!p.killed) player.lastHand = p.hand[0].number;
             return player;
 
         }).sort((p1, p2) => {
@@ -233,9 +234,12 @@ class Dealer {
         let bestHand = 0;
 
         this.data.win.forEach(p => {
+            p.winner = false;
+
             if (bestHand > p.lastHand) return;
             bestHand = p.lastHand;
             if (!p.killed) {
+                p.winner = true;
                 AR.winner(p);
             }
         });
@@ -249,7 +253,6 @@ class Dealer {
             `| Deck(${this.deck ? this.deck.cards.length : "No Deck"}) ` +
             `${this.deck ? this.deck.toString() : ""}`);
         this.players.forEach((p) => p.log());
-        console.log(``);
     }
 
     logTurns() {

@@ -85,17 +85,12 @@ class Player {
             if (!(hasType !== "Number")) throw new PlayerActionError(me, action, `{ has : not a Number } it is ${hasType} ${definition}`);
         }
 
-        this.log();
-        console.log(action);
-
         AR.action(action, this.getPublicInfo());
 
         // Playing Card
         const card = this.removeHandCardByNumber(action.card);
         if (card === undefined) throw new PlayerActionError(me, action, "Could not found chosen card!");
         this.playedCard(card);
-
-        this.log();
 
         return action;
     }

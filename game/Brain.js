@@ -18,8 +18,8 @@ class OreganoBrain extends Brain {
             return prev;
             }, []);
 
-        console.log(`Others: ${JSON.stringify(others)}`);
-        console.log(`saveChoices: ${JSON.stringify(saveChoices)}`);
+        //console.log(`Others: ${JSON.stringify(others)}`);
+        //console.log(`Brain: saveChoices: ${JSON.stringify(saveChoices)}`);
 
         // Countess
         if (hand.indexOf(7) >= 0 && (hand.indexOf(5) >= 0 || hand.indexOf(6) >= 0 )) {
